@@ -3,6 +3,12 @@
 This includes spark integration with airflow using ssh connection to submit the spark-jobs.
 Run the 'docker-compose.yml' to run the services.  
 
+```
+mkdir -p ./dags ./logs ./plugins ./config
+
+```
+
+
 
 ## Initializing postgres db for airflow services  
 
