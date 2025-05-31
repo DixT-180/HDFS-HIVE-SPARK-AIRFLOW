@@ -1,13 +1,7 @@
 
-
-
-
 version: "3.7"
 
 services:
-
-
-  
 
   spark-master:
     image: custom-spark-master:3.5.5
@@ -30,9 +24,7 @@ services:
       
       - ./spark-jobs:/opt/spark-jobs
 
-      - ./dags:/opt/airflow/dags
-
-      - ./minio-data:/minio-data
+   
     
     
 
