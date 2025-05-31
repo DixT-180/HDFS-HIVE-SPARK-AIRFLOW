@@ -1,87 +1,225 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
+# Hadoop-Spark-Hive Stack (Docker Compose)
 
-# Changes
+This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stack. The `docker-compose.yaml` defines the following services:
 
-Version 2.0.0 introduces uses wait_for_it script for the cluster startup
+1. **Apache Hadoop**  
+   - **NameNode** (HDFS metadata)  
+   - **DataNode** (HDFS data)  
+   - **ResourceManager** (YARN)  
+   - **NodeManager** (YARN)  
+   - **HistoryServer** (YARN application history)
 
-# Hadoop Docker
+2. **Apache Spark**  
+   - **Spark Master**  
+   - **Spark Worker**  
+   - **Spark History Server**
 
-## Supported Hadoop Versions
-See repository branches for supported hadoop versions
+3. **Apache Hive**  
+   - **PostgreSQL** (Hive Metastore backend)  
+   - **Hive Metastore** (Thrift service)  
+   - **HiveServer2** (JDBC/ODBC queries)
 
-## Quick Start
+---
 
-To deploy an example HDFS cluster, run:
+## Table of Contents
+
+1. [Repository Structure](#repository-structure)  
+2. [Prerequisites](#prerequisites)  
+3. [Environment Configuration](#environment-configuration)  
+4. [Launching the Stack](#launching-the-stack)  
+5. [Accessing Services](#accessing-services)  
+6. [Stopping & Cleaning Up](#stopping--cleaning-up)  
+7. [Volume Persistence](#volume-persistence)  
+8. [Adding JDBC Drivers for Hive](#adding-jdbc-drivers-for-hive)  
+9. [Troubleshooting](#troubleshooting)  
+
+---
+
+## Repository Structure
+
+```text
+.
+├── datanode/                    ← DataNode helper scripts
+│   └── run.sh
+├── historyserver/               ← Spark HistoryServer helper scripts
+│   └── run.sh
+├── jars/                        ← External JARs (e.g., JDBC drivers)
+│   └── postgresql-42.7.4.jar
+├── logs/                        ← Shared logs for Hadoop/Spark/Hive
+├── namenode/                    ← NameNode helper scripts
+│   └── run.sh
+├── nodemanager/                 ← NodeManager helper scripts
+│   └── run.sh
+├── resourcemanager/             ← ResourceManager helper scripts
+│   └── run.sh
+├── spark-custom-images/         ← Custom Spark images (Master, Worker, History)
+│   ├── Dockerfile.master
+│   ├── Dockerfile.worker
+│   └── Dockerfile.history
+├── spark-events/                ← Spark event logs for HistoryServer
+├── submit/                      ← Example YARN/Spark submission JARs/scripts
+│   ├── WordCount.jar
+│   └── run.sh
+├── docker-compose.yaml          ← Main Compose file (Hadoop + Spark + Hive)
+├── hadoop.env                   ← Environment variables for Hadoop/YARN containers
+├── .env                         ← Environment variables for Docker Compose (image tags, UIDs)
+└── README.md                    ← This file
 ```
-  docker-compose up
-```
 
-
-
-
-
-`docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `dockerhadoop_default`.
-
-Run `docker network inspect` on the network (e.g. `dockerhadoop_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
-
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
-
-## Configure Environment Variables
-
-The configuration parameters can be specified in the hadoop.env file or as environmental variables for specific services (e.g. namenode, datanode etc.):
-```
-  CORE_CONF_fs_defaultFS=hdfs://namenode:8020
-```
-
-CORE_CONF corresponds to core-site.xml. fs_defaultFS=hdfs://namenode:8020 will be transformed into:
-```
-  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>
-```
-To define dash inside a configuration parameter, use triple underscore, such as YARN_CONF_yarn_log___aggregation___enable=true (yarn-site.xml):
-```
-  <property><name>yarn.log-aggregation-enable</name><value>true</value></property>
-```
-
-The available configurations are:
-* /etc/hadoop/core-site.xml CORE_CONF
-* /etc/hadoop/hdfs-site.xml HDFS_CONF
-* /etc/hadoop/yarn-site.xml YARN_CONF
-* /etc/hadoop/httpfs-site.xml HTTPFS_CONF
-* /etc/hadoop/kms-site.xml KMS_CONF
-* /etc/hadoop/mapred-site.xml  MAPRED_CONF
-
-If you need to extend some other configuration file, refer to base/entrypoint.sh bash script.
-
-# Apache Iceberg Setup with HDFS, Spark, and Hive Metastore
-
-This repository contains a pdf installation guide for configuring Apache Iceberg 1.9.0 with Hadoop Distributed File System (HDFS), Apache Spark 3.4.4, and Hive 4.0.0 Metastore in a Dockerized environment. The guide provides comprehensive instructions for setting up a reproducible big data environment using Docker and Docker Compose, integrating HDFS for storage, Spark for computation, and Hive Metastore for metadata management.
-
-## Features
-- **Containerized Environment**: Deploys HDFS, YARN, Spark, Hive Metastore, and PostgreSQL using Docker.
-- **Apache Iceberg Integration**: Configures Iceberg for transactional table operations with Hive Metastore and HDFS.
-- **Spark and PySpark Support**: Includes instructions for interacting with Iceberg tables via Spark SQL and PySpark.
-- **Verification Steps**: Validates setup with MapReduce jobs, Spark version checks, and Iceberg table 
+---
 
 ## Prerequisites
-- **Docker and Docker Compose**: Installed and configured.
-- **PostgreSQL JDBC Driver**: Download `postgresql-42.7.4.jar` from [https://jdbc.postgresql.org/download/](https://jdbc.postgresql.org/download/).
-- **System Requirements**: Minimum 8GB RAM recommended for Docker containers.
-- **Environment Variables**:
-  - `POSTGRES_LOCAL_PATH`: Path to `postgresql-42.7.4.jar` (e.g., `C:/path/to/postgresql-42.7.4.jar`).
-  - `HIVE_VERSION`: Set to `4.0.0`.
 
-## Usage
-- Setting up HDFS, YARN, Spark, and Hive Metastore services.
-- Building custom Spark 3.4.4 images.
-- Configuring Iceberg with Spark SQL or PySpark.
-- Creating and querying Iceberg tables, and verifying metadata in Hive Metastore and HDFS.
+1. **Docker** (version ≥ 20.10)  
+   Install from [https://www.docker.com/get-started](https://www.docker.com/get-started).
 
-## Airflow-spark Integration
+2. **Docker Compose**  
+   - On Docker Desktop (Windows/macOS), Compose v2 is included (`docker compose`).  
+   - On Linux, install Compose v1 (`docker-compose`) via package manager or from [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/).
 
-this also includes spark integration with airflow using ssh connection to submit the spark-jobs.
-The dockerfile at the main directory can be ignored, its only for using custom airflow image,
-which we arenot doing here. 
+3. **Git**  
+   To clone and manage the repository.
+
+---
+
+## Environment Configuration
+
+### `hadoop.env`
+Contains environment variables for Hadoop services (NameNode, DataNode, ResourceManager, NodeManager).  
+Example:
+```ini
+CLUSTER_NAME=test
+
+
+
+
+
+## Launching the Stack
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/DixT-180/HDFS-HIVE-SPARK-AIRFLOW.git
+   cd HDFS-HIVE-SPARK-AIRFLOW
+   ```
+
+2. **Build Custom Spark Images**  
+   If you want to build your own Spark Master, Worker, and History Server images, navigate to `spark-custom-images/` and run:
+   ```bash
+   cd spark-custom-images
+   docker build -t custom-spark-master:3.5.5 -f Dockerfile.master .
+   docker build -t custom-spark-worker:3.5.5 -f Dockerfile.worker .
+   docker build -t custom-spark-history:3.5.5 -f Dockerfile.history .
+   cd ..
+   ```
+   Skip if these images are already available.
+
+3. **Start All Services**
+   ```bash
+   docker-compose up -d
+   ```
+   - Pulls any missing images and starts containers defined in `docker-compose.yaml`.
+
+4. **Verify Container Status**
+   ```bash
+   docker-compose ps
+   ```
+   Confirm each service is `Up (healthy)` (especially NameNode, ResourceManager, Spark Master).
+
+---
+
+## Accessing Services
+
+After starting, access services via `localhost`:
+
+| Service                        | Port | URL / Endpoint                                      |
+|--------------------------------|------|-----------------------------------------------------|
+| **HDFS NameNode Web UI**       | 9870 | http://localhost:9870                               |
+| **YARN ResourceManager Web UI**| 8088 | http://localhost:8088                               |
+| **Spark Master Web UI**        | 8081 | http://localhost:8081                               |
+| **Spark Worker Web UI**        | 8082 | http://localhost:8082                               |
+| **Spark History Server**       | 18080| http://localhost:18080                              |
+| **PostgreSQL (Hive Metastore)**| 5432 | `postgres://hive:password@localhost:5432/metastore_db` |
+| **Hive Metastore Thrift**      | 9083 | Thrift endpoint for Hive Metastore                  |
+| **HiveServer2 (Thrift)**       | 10000| JDBC/ODBC endpoint for Hive queries                 |
+
+> If ports conflict on your host, edit the `ports:` mapping in `docker-compose.yaml` before launching.
+
+---
+
+## Stopping & Cleaning Up
+
+1. **Stop All Containers (keep volumes)**
+   ```bash
+   docker-compose down
+   ```
+
+2. **Stop and Remove Everything (including volumes)**
+   ```bash
+   docker-compose down --volumes
+   ```
+   - Deletes named volumes (`hadoop_namenode`, `hadoop_datanode`, `hadoop_historyserver`, `hive-db`, `warehouse`).  
+   - **Warning:** This removes persisted data (HDFS metadata, Hive DB).
+
+---
+
+## Volume Persistence
+
+Named volumes in `docker-compose.yaml`:
+
+- **`hadoop_namenode`**  
+  - Mounted at `/hadoop/dfs/name` in the NameNode  
+  - Stores HDFS metadata
+
+- **`hadoop_datanode`**, **`hadoop_datanode2`**, **`hadoop_datanode3`**  
+  - Mounted at `/hadoop/dfs/data` in each DataNode  
+  - Stores HDFS block data
+
+- **`hadoop_historyserver`**  
+  - Mounted at `/hadoop/yarn/timeline` in the HistoryServer  
+  - Stores YARN application logs
+
+- **`hive-db`**  
+  - Mounted at `/var/lib/postgresql/data` in PostgreSQL  
+  - Stores Hive Metastore DB
+
+- **`warehouse`**  
+  - Mounted at `/opt/hive/data/warehouse` in Hive containers  
+  - Hive warehouse for tables/data
+
+Host-mounted directories:
+
+- `./jars` → `/opt/spark/external-jars` (external JAR files)
+- `./spark-events` → `/spark-events` (Spark event logs)
+- `./logs` → shared logs for Hadoop/Spark/Hive
+
+---
+
+## Adding JDBC Drivers for Hive
+
+Hive requires a JDBC driver (PostgreSQL) for its Metastore:
+
+1. **Place the JDBC JAR in `./jars/`**  
+   Example:
+   ```
+   jars/postgresql-42.7.4.jar
+   ```
+
+2. **Bind-mount into the Hive Metastore service** in `docker-compose.spark.yaml`:
+   ```yaml
+   metastore:
+     image: apache/hive:4.0.0
+     ...
+     volumes:
+       - warehouse:/opt/hive/data/warehouse
+       - type: bind
+         source: ./jars/postgresql-42.7.4.jar
+         target: /opt/hive/lib/postgres.jar
+   ```
+
+3. **Restart Hive Metastore**:
+   ```bash
+   docker-compose restart metastore
+   ```
+
+
