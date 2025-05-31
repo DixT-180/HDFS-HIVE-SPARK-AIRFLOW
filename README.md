@@ -1,8 +1,7 @@
 ## Airflow-spark Integration
 
-this also includes spark integration with airflow using ssh connection to submit the spark-jobs.
-The dockerfile at the main directory can be ignored, its only for using custom airflow image,
-which we arenot doing here. 
+This includes spark integration with airflow using ssh connection to submit the spark-jobs.
+Run the 'docker-compose.yml' to run the services.  
 
 
 ## setting authentincation for post request to airflow api
@@ -30,9 +29,9 @@ I used SSHOperator cause spark-submit operator for some reason isn't working as 
 
 In airflow ui: 
 
-connection type : ssh
-ssh_conn_id : spark_master_ssh
-Host : spark-master
-login: root
-password : sparkpass
-port : 22 
+connection type : ssh  
+ssh_conn_id : spark_master_ssh  
+Host : spark-master  
+login: root  
+password : sparkpass  
+port : 22   
