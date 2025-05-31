@@ -39,8 +39,11 @@ auth_backends = airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.ses
 
 ## Setup ssh connection for airflow to submit spark-jobs using ssh connection
 
+
+
 I used SSHOperator cause spark-submit operator for some reason isn't working as it should be.
 
+The custom spark-master image 'custom-spark-master:3.5.5' image used here has already been configured with ssh package with followinf credentials.  
 
 In airflow ui: 
 
