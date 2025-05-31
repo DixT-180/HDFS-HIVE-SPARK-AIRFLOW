@@ -61,7 +61,7 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 ├── submit/                      ← Example YARN/Spark submission JARs/scripts
 │   ├── WordCount.jar
 │   └── run.sh
-├── docker-compose.yaml          ← Main Compose file (Hadoop + Spark + Hive)
+├── docker-compose.spark.yaml          ← Main Compose file (Hadoop + Spark + Hive)
 ├── hadoop.env                   ← Environment variables for Hadoop/YARN containers
 ├── .env                         ← Environment variables for Docker Compose (image tags, UIDs)
 └── README.md                    ← This file
