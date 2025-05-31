@@ -58,34 +58,11 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 │   ├── Dockerfile.worker
 │   └── Dockerfile.history
 ├── spark-events/                ← Spark event logs for HistoryServer
-├── submit/                      ← Example YARN/Spark submission JARs/scripts
-│   ├── WordCount.jar
-│   └── run.sh
 ├── docker-compose.spark.yaml          ← Main Compose file (Hadoop + Spark + Hive)
 ├── hadoop.env                   ← Environment variables for Hadoop/YARN containers
 ├── .env                         ← Environment variables for Docker Compose (image tags, UIDs)
 └── README.md                    ← This file
 ```
-
-**Git**  
-   To clone and manage the repository.
-   ```bash
-   git clone https://github.com/DixT-180/HDFS-HIVE-SPARK-AIRFLOW.git
-   cd HDFS-HIVE-SPARK-AIRFLOW
-    ```
-
-
-## Environment Configuration
-
-### `hadoop.env`
-Contains environment variables for Hadoop services (NameNode, DataNode, ResourceManager, NodeManager).  
-Example:
-```ini
-CLUSTER_NAME=test
-
-
-
-
 
 ## Launching the Stack
 
