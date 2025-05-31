@@ -4,6 +4,21 @@ This includes spark integration with airflow using ssh connection to submit the 
 Run the 'docker-compose.yml' to run the services.  
 
 
+## Initializing postgres db for airflow services  
+
+```
+docker compose up airflow-init  
+```
+
+Now You can start all its services,  
+
+```
+docker compose up  
+```
+
+
+
+
 ## setting authentincation for post request to airflow api
 
 
