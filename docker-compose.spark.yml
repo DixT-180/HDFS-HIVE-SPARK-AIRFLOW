@@ -1,0 +1,254 @@
+
+
+
+
+version: "3.7"
+
+services:
+
+
+  
+
+  spark-master:
+    image: custom-spark-master:3.5.5
+    container_name: spark-master
+    depends_on:
+      - namenode
+      - datanode
+    ports:
+      - "8081:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SPARK_EVENTLOG_ENABLED=true
+      - SPARK_EVENTLOG_DIR=hdfs://namenode:9000/spark-logs
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=hdfs://namenode:9000/spark-logs
+
+    volumes:
+      - ./jars:/opt/spark/external-jars
+      
+      - ./spark-jobs:/opt/spark-jobs
+
+      - ./dags:/opt/airflow/dags
+
+      - ./minio-data:/minio-data
+    
+    
+
+  spark-worker-1:
+    image: custom-spark-worker:3.5.5
+    container_name: spark-worker-1
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+
+      - SPARK_EVENTLOG_ENABLED=true
+      - SPARK_EVENTLOG_DIR=hdfs://namenode:9000/spark-logs
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=hdfs://namenode:9000/spark-logs
+    # mem_limit: 2g
+
+  
+
+  # spark-worker-2:
+  #   image: custom-spark-worker:latest
+  #   container_name: spark-worker-2
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8083:8082"
+  #   environment:
+  #     - "SPARK_MASTER=spark://spark-master:7077"
+  #     - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+
+  #     - SPARK_EVENTLOG_ENABLED=true
+  #     - SPARK_EVENTLOG_DIR=hdfs://namenode:9000/spark-logs
+  #     - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=hdfs://namenode:9000/spark-logs
+  
+  
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - 9870:9870
+      - 9000:9000
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    restart: always
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+
+
+  # datanode2:
+  #   image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+  #   container_name: datanode2
+  #   restart: always
+  #   volumes:
+  #     - hadoop_datanode2:/hadoop/dfs/data
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870"
+  #   env_file:
+  #     - ./hadoop.env
+
+  # datanode3:
+  #   image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+  #   container_name: datanode3
+  #   restart: always
+  #   volumes:
+  #     - hadoop_datanode3:/hadoop/dfs/data
+  #   environment:
+  #     SERVICE_PRECONDITION: "namenode:9870"
+  #   env_file:
+  #     - ./hadoop.env
+  
+
+  
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+  
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    restart: always
+    
+    
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+
+
+  hive-postgres:
+    image: postgres
+    restart: unless-stopped
+    container_name: postgres-hive
+    hostname: hive-postgres
+    environment:
+      POSTGRES_DB: 'metastore_db'
+      POSTGRES_USER: 'hive'
+      POSTGRES_PASSWORD: 'password'
+    ports:
+      - '5432:5432'
+ 
+    volumes:
+        - hive-db:/var/lib/postgresql/data  #fixed it 
+
+
+
+  metastore:
+    image: apache/hive:4.0.0
+    depends_on:
+      - hive-postgres
+    restart: unless-stopped
+    container_name: metastore
+    hostname: metastore
+    environment:
+      
+      DB_DRIVER: postgres
+      SERVICE_NAME: 'metastore'
+      SERVICE_OPTS: '-Xmx1G -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+                     -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://hive-postgres:5432/metastore_db
+                     -Djavax.jdo.option.ConnectionUserName=hive
+                     -Djavax.jdo.option.ConnectionPassword=password'
+      
+    ports:
+        - '9083:9083'
+    volumes:
+        - warehouse:/opt/hive/data/warehouse
+        - type: bind
+          source: D:/Docker-hadoop/jars/postgresql-42.7.4.jar
+          target: /opt/hive/lib/postgres.jar
+    
+
+  hiveserver2:
+    image: apache/hive:4.0.0
+    depends_on:
+      - metastore
+    restart: unless-stopped
+    container_name: hiveserver2
+    environment:
+      HIVE_SERVER2_THRIFT_PORT: 10000
+      SERVICE_OPTS: '-Xmx1G -Dhive.metastore.uris=thrift://metastore:9083'
+      IS_RESUME: 'true'
+      SERVICE_NAME: 'hiveserver2'
+     
+    ports:
+      - '10000:10000'
+      - '10002:10002'
+    volumes:
+      - warehouse:/opt/hive/data/warehouse
+   
+
+
+
+  spark-history-server:
+    image: custom-spark-history:3.5.5
+    container_name: spark-history
+    depends_on:
+    - namenode
+    ports:
+    - "18080:18080"
+    environment:
+    - "SPARK_MASTER=spark://spark-master:7077"
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+
+
+    - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=hdfs://namenode:9000/spark-logs -Dspark.history.fs.cleaner.enabled=true -Dspark.history.fs.cleaner.interval=1d -Dspark.history.fs.cleaner.maxAge=7d
+    volumes:
+    - ./spark-events:/spark-events
+
+
+ 
+   
+   
+
+volumes:
+  
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_datanode2:
+  hadoop_datanode3:
+  hadoop_historyserver:
+  hive-db:
+  warehouse:
+
+
+
+networks:
+  airflow-network:
+    driver: bridge

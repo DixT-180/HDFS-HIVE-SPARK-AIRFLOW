@@ -1,0 +1,18 @@
+FROM openjdk:11-jdk
+
+ENV SPARK_VERSION=3.5.5
+ENV HADOOP_VERSION=3
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+
+# Install Spark
+RUN wget --no-verbose https://archive.apache.org/dist/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
+    tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /opt && \
+    mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark && \
+    rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+# Set working directory
+WORKDIR /opt/spark
+
+# Create entrypoint to run history server with config
+CMD ["bin/spark-class", "org.apache.spark.deploy.history.HistoryServer"]

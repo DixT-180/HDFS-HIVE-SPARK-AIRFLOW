@@ -1,0 +1,52 @@
+FROM openjdk:11-jdk
+
+   ENV SPARK_VERSION=3.5.5
+   ENV HADOOP_VERSION=3
+   ENV SPARK_HOME=/opt/spark
+   ENV PATH=$SPARK_HOME/bin:$PATH
+
+   RUN wget --no-verbose https://archive.apache.org/dist/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
+       tar -xzf spark-3.5.5-bin-hadoop3.tgz -C /opt && \
+       mv /opt/spark-3.5.5-bin-hadoop3 /opt/spark && \
+       rm spark-3.5.5-bin-hadoop3.tgz
+
+
+
+
+   # --- [2] Install and configure OpenSSH server ---
+RUN apt-get update && \
+apt-get install -y openssh-server && \
+mkdir /var/run/sshd && \
+echo 'root:sparkpass' | chpasswd  # Sets root password (change 'sparkpass' as needed)
+
+# Allow root login via SSH (for demo/dev)
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+RUN apt-get update && apt-get install -y python3 python3-pip
+
+RUN pip install pandas boto3
+
+# --- [3] Expose SSH port ---
+EXPOSE 22 7077 8080 8081
+
+
+ENV JAVA_HOME=/usr/local/openjdk-11
+ENV PATH=$JAVA_HOME/bin:/opt/spark/bin:$PATH
+
+CMD service ssh start && /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+
+
+# ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+# ENV PATH=$JAVA_HOME/bin:$PATH
+
+
+
+# # --- [4] Start SSH and Spark Master on container start ---
+# CMD service ssh start && bin/spark-class org.apache.spark.deploy.master.Master
+#    WORKDIR /opt/spark
+#    CMD ["bin/spark-class", "org.apache.spark.deploy.master.Master"]
+
+
+
+
+   
