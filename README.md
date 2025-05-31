@@ -24,15 +24,12 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 
 ## Table of Contents
 
-1. [Repository Structure](#repository-structure)  
-2. [Prerequisites](#prerequisites)  
-3. [Environment Configuration](#environment-configuration)  
-4. [Launching the Stack](#launching-the-stack)  
-5. [Accessing Services](#accessing-services)  
-6. [Stopping & Cleaning Up](#stopping--cleaning-up)  
-7. [Volume Persistence](#volume-persistence)  
-8. [Adding JDBC Drivers for Hive](#adding-jdbc-drivers-for-hive)  
-9. [Troubleshooting](#troubleshooting)  
+1. [Repository Structure](#repository-structure)   
+2. [Launching the Stack](#launching-the-stack)  
+3. [Accessing Services](#accessing-services)  
+4. [Stopping & Cleaning Up](#stopping--cleaning-up)  
+5. [Volume Persistence](#volume-persistence)  
+6. [Adding JDBC Drivers for Hive](#adding-jdbc-drivers-for-hive)  
 
 ---
 
