@@ -80,7 +80,11 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 
 3. **Git**  
    To clone and manage the repository.
-
+   ```bash
+   git clone https://github.com/DixT-180/HDFS-HIVE-SPARK-AIRFLOW.git
+   cd HDFS-HIVE-SPARK-AIRFLOW
+   
+   ```
 ---
 
 ## Environment Configuration
