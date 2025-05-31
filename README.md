@@ -67,25 +67,13 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 └── README.md                    ← This file
 ```
 
----
-
-## Prerequisites
-
-1. **Docker** (version ≥ 20.10)  
-   Install from [https://www.docker.com/get-started](https://www.docker.com/get-started).
-
-2. **Docker Compose**  
-   - On Docker Desktop (Windows/macOS), Compose v2 is included (`docker compose`).  
-   - On Linux, install Compose v1 (`docker-compose`) via package manager or from [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/).
-
-3. **Git**  
+**Git**  
    To clone and manage the repository.
    ```bash
    git clone https://github.com/DixT-180/HDFS-HIVE-SPARK-AIRFLOW.git
    cd HDFS-HIVE-SPARK-AIRFLOW
-   
-   ```
----
+    ```
+
 
 ## Environment Configuration
 
