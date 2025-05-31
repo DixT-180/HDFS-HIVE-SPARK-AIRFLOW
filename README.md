@@ -45,11 +45,16 @@ I used SSHOperator cause spark-submit operator for some reason isn't working as 
 
 The custom spark-master image 'custom-spark-master:3.5.5' image used here has already been configured with ssh package with followinf credentials.  
 
-In airflow ui: 
 
+
+All thats left to do is setup following configs in airflow ui.  
+
+```
 connection type : ssh  
 ssh_conn_id : spark_master_ssh  
 Host : spark-master  
 login: root  
 password : sparkpass  
 port : 22   
+
+```
