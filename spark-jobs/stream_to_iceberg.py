@@ -59,11 +59,28 @@ spark.sql("""
     ) USING ICEBERG
 """)
 
+
+#continuos streaming
+
+# query = df.writeStream \
+#     .format("iceberg") \
+#     .outputMode("append") \
+#     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people") \
+#     .trigger(processingTime="10 seconds") \
+#     .toTable("local.people_db.people")
+
+# query.awaitTermination()
+
+
+
+
+#batch streaming which we are doing
 query = df.writeStream \
     .format("iceberg") \
     .outputMode("append") \
     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people") \
-    .trigger(processingTime="10 seconds") \
+    .trigger(once=True) \
     .toTable("local.people_db.people")
 
 query.awaitTermination()
+

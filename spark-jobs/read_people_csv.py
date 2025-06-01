@@ -9,7 +9,7 @@ spark = (
     SparkSession.builder
     .appName("WriteToHDFS")
     .config("spark.driver.memory", "2g")         # 4 GB RAM for the driver
-    .config("spark.executor.memory", "2g")       # 4 GB RAM per executor
+    .config("spark.executor.memory", "2g")       # 2 GB RAM per executor
     .config("spark.executor.cores", "4")         # 4 cores per executor
     .config("spark.cores.max", "4")              # Max total cores
     .getOrCreate()
