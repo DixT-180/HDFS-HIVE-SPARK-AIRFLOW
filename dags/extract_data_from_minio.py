@@ -14,7 +14,7 @@
 # }
 
 # with DAG(
-#     dag_id='extract_people_from_minio',
+#     dag_id='extract_data_from_minio',
 #     default_args=default_args,
 #     schedule_interval=None,
 #     start_date=days_ago(1),
@@ -23,14 +23,14 @@
 # ) as dag:
 
 #     extract_task = SSHOperator(
-#         task_id='extract_people_csv',
+#         task_id='extract_data_csv',
 #         ssh_hook= SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
 #         # ssh_conn_id='spark_master_ssh',
 #         command=(
 #             "export JAVA_HOME=/usr/local/openjdk-11 && "
 #             "/opt/spark/bin/spark-submit "
 #             "--master spark://spark-master:7077 --deploy-mode client "
-#             "/opt/spark-jobs/read_people_csv.py "
+#             "/opt/spark-jobs/read_data_csv.py "
 #             "{{ dag_run.conf['bucket'] }} {{ dag_run.conf['filename'] }}"
 #         ),
 #               # Optional: SSH connection timeout (seconds)
@@ -51,7 +51,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='extract_people_from_minio',
+    dag_id='extract_data_from_minio',
     default_args=default_args,
     schedule_interval=None,
     start_date=days_ago(1),
@@ -61,13 +61,13 @@ with DAG(
 
     # Step 1: Extract CSV from Minio (user-supplied bucket & filename)
     extract_task = SSHOperator(
-        task_id='extract_people_csv',
+        task_id='extract_data_csv',
         ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
         command=(
             "export JAVA_HOME=/usr/local/openjdk-11 && "
             "/opt/spark/bin/spark-submit "
             "--master spark://spark-master:7077 --deploy-mode client "
-            "/opt/spark-jobs/read_people_csv.py "
+            "/opt/spark-jobs/read_data_csv.py "
             "{{ dag_run.conf['bucket'] }} {{ dag_run.conf['filename'] }}"
         ),
         do_xcom_push=False
@@ -75,7 +75,7 @@ with DAG(
 
     # Step 2: Run Spark streaming (batch) job to Iceberg
     stream_to_iceberg_task = SSHOperator(
-        task_id='stream_people_to_iceberg',
+        task_id='stream_data_to_iceberg',
         ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
         command=(
             "export JAVA_HOME=/usr/local/openjdk-11 && "

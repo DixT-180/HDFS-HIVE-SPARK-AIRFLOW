@@ -80,7 +80,7 @@ import logging
 
 app = Flask(__name__)
 
-DAG_ID = "extract_people_from_minio"
+DAG_ID = "extract_data_from_minio"
 AIRFLOW_API_URL = f"http://airflow-apiserver:8080/api/v1/dags/{DAG_ID}/dagRuns"
 
 @app.route('/minio-event', methods=['POST'])

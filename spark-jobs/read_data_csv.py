@@ -17,7 +17,7 @@ spark = (
 
 # Args
 bucket = sys.argv[1] if len(sys.argv) > 1 else "mybucket"
-filename = sys.argv[2] if len(sys.argv) > 2 else "people.csv"
+filename = sys.argv[2] if len(sys.argv) > 2 else "data.csv"
 hdfs_target = "hdfs://namenode:9000/user/staging_area/" #+ filename
 
 # Get data from MinIO with boto3
