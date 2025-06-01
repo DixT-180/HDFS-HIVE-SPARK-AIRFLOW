@@ -82,7 +82,7 @@ with DAG(
             "/opt/spark/bin/spark-submit "
             "--master spark://spark-master:7077 --deploy-mode client "
             "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
-            "/opt/spark-jobs/stream_to_iceberg.py "
+            "/opt/spark-jobs/titanic_etl.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }} "
             # add more args if your script expects them, e.g., paths or params
         ),
         do_xcom_push=False
@@ -98,7 +98,8 @@ with DAG(
             "/opt/spark/bin/spark-submit "
             "--master spark://spark-master:7077 --deploy-mode client "
             "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
-            "/opt/spark-jobs/read_from_iceberg_table.py"
+            "/opt/spark-jobs/read_from_iceberg_table.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }}"
+            ""
             # Add arguments if needed, like table names, output paths, etc.
         ),
         do_xcom_push=False
