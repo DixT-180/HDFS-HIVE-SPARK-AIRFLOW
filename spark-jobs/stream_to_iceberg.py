@@ -1,13 +1,36 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from pyspark.sql.functions import col, lower, when
 from pyspark.sql.functions import col
+from pyspark.sql.types import *
+import sys
+
+
+file_prefix = sys.argv[1] if len(sys.argv) > 1 else "tested"
+db_name = f"{file_prefix}_db"
+table_name = f"{file_prefix}_cleaned"
+
+
+
+# schema = StructType([
+#     StructField("id", IntegerType()),
+#     StructField("name", StringType()),
+#     StructField("age", IntegerType()),
+#     StructField("gender", StringType())
+# ])
 
 schema = StructType([
-    StructField("id", IntegerType()),
-    StructField("name", StringType()),
-    StructField("age", IntegerType()),
-    StructField("gender", StringType())
+    StructField("PassengerId", IntegerType()),
+    StructField("Survived", IntegerType()),
+    StructField("Pclass", IntegerType()),
+    StructField("Name", StringType()),
+    StructField("Sex", StringType()),
+    StructField("Age", DoubleType()),
+    StructField("SibSp", IntegerType()),
+    StructField("Parch", IntegerType()),
+    StructField("Ticket", StringType()),
+    StructField("Fare", DoubleType()),
+    StructField("Cabin", StringType()),
+    StructField("Embarked", StringType()),
 ])
 
 spark = SparkSession.builder \
@@ -22,27 +45,35 @@ spark = SparkSession.builder \
 
 
 
-# .appName("stream-csv-to-iceberg") \
-#     .config("spark.executor.cores", "2") \
-#     .config("spark.executor.memory", "1g") \
-#     .config("spark.cores.max", "6") \
+
 
 df = spark.readStream \
     .option("header", True) \
+    .option("cleanSource", "archive") \
+    .option("sourceArchiveDir", "hdfs://namenode:9000/user/archive/") \
+    .option("maxFilesPerTrigger", 1) \
     .schema(schema) \
     .csv("hdfs://namenode:9000/user/staging_area/")
 
 
+df = df.withColumn("Name", lower(col("Name")))
 
-df = df \
-    .filter(col("age") >= 25) \
-    .withColumn("gender", lower(col("gender"))) \
-    .withColumn(
-        "age",
-        when(col("age") < 35, "young")
-        .when((col("age") >= 35) & (col("age") < 50), "middle-aged")
-        .otherwise("senior")
-    )
+cols_to_drop = ["Embarked", "Cabin", "Parch", "SibSp"]
+df = df.drop(*cols_to_drop)
+
+
+
+
+
+# df = df \
+#     .filter(col("age") >= 25) \
+#     .withColumn("gender", lower(col("gender"))) \
+#     .withColumn(
+#         "age",
+#         when(col("age") < 35, "young")
+#         .when((col("age") >= 35) & (col("age") < 50), "middle-aged")
+#         .otherwise("senior")
+#     )
 
 # Create the database if it doesn't exist
 # spark.sql("DROP TABLE IF EXISTS local.people_db.people")
@@ -51,25 +82,19 @@ spark.sql("CREATE DATABASE IF NOT EXISTS local.people_db")
 
 # Create Iceberg table if not exists (schema must match your data)
 spark.sql("""
-    CREATE TABLE IF NOT EXISTS local.people_db.people (
-      id INT,
-      name STRING,
-      age STRING,
-      gender STRING
-    ) USING ICEBERG
+   CREATE TABLE IF NOT EXISTS local.people_db.people (
+    passengerid INT,
+    survived INT,
+    pclass INT,
+    name STRING,
+    sex STRING,
+    age DOUBLE,
+    ticket STRING,
+    fare DOUBLE
+) USING ICEBERG
+    PARTITIONED BY (pclass)
+
 """)
-
-
-#continuos streaming
-
-# query = df.writeStream \
-#     .format("iceberg") \
-#     .outputMode("append") \
-#     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people") \
-#     .trigger(processingTime="10 seconds") \
-#     .toTable("local.people_db.people")
-
-# query.awaitTermination()
 
 
 
@@ -79,8 +104,9 @@ query = df.writeStream \
     .format("iceberg") \
     .outputMode("append") \
     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people") \
-    .trigger(once=True) \
+    .trigger(processingTime="5 seconds") \
     .toTable("local.people_db.people")
 
 query.awaitTermination()
 
+  # .trigger(once=True) \

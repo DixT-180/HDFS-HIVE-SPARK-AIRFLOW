@@ -73,43 +73,46 @@ with DAG(
         do_xcom_push=False
     )
 
-    # Step 2: Run Spark streaming (batch) job to Iceberg
-    stream_to_iceberg_task = SSHOperator(
-        task_id='stream_data_to_iceberg',
-        ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
-        command=(
-            "export JAVA_HOME=/usr/local/openjdk-11 && "
-            "/opt/spark/bin/spark-submit "
-            "--master spark://spark-master:7077 --deploy-mode client "
-            "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
-            "/opt/spark-jobs/titanic_etl.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }} "
-            # add more args if your script expects them, e.g., paths or params
-        ),
-        do_xcom_push=False
-    )
+    # # Step 2: Run Spark streaming (batch) job to Iceberg
+    # stream_to_iceberg_task = SSHOperator(
+    #     task_id='stream_data_to_iceberg',
+    #     ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
+    #     command=(
+    #         "export JAVA_HOME=/usr/local/openjdk-11 && "
+    #         "/opt/spark/bin/spark-submit "
+    #         "--master spark://spark-master:7077 --deploy-mode client "
+    #         "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
+    #         "/opt/spark-jobs/stream_to_iceberg.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }} "
+    #         # add more args if your script expects them, e.g., paths or params
+    #     ),
+    #     do_xcom_push=False
+    # )
 
 
-    # Step 3: Read/process from Iceberg table
-    read_from_iceberg_task = SSHOperator(
-        task_id='read_from_iceberg',
-        ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
-        command=(
-            "export JAVA_HOME=/usr/local/openjdk-11 && "
-            "/opt/spark/bin/spark-submit "
-            "--master spark://spark-master:7077 --deploy-mode client "
-            "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
-            "/opt/spark-jobs/read_from_iceberg_table.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }}"
-            ""
-            # Add arguments if needed, like table names, output paths, etc.
-        ),
-        do_xcom_push=False
-    )
-
-
-
+    # # Step 3: Read/process from Iceberg table
+    # read_from_iceberg_task = SSHOperator(
+    #     task_id='read_from_iceberg',
+    #     ssh_hook=SSHHook(ssh_conn_id='spark_master_ssh', cmd_timeout=200),
+    #     command=(
+    #         "export JAVA_HOME=/usr/local/openjdk-11 && "
+    #         "/opt/spark/bin/spark-submit "
+    #         "--master spark://spark-master:7077 --deploy-mode client "
+    #         "--jars /opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar "
+    #         "/opt/spark-jobs/read_from_iceberg_table.py {{ dag_run.conf['filename'].rsplit('.', 1)[0] }}"
+    #         ""
+    #         # Add arguments if needed, like table names, output paths, etc.
+    #     ),
+    #     do_xcom_push=False
+    # )
 
 
 
 
 
-    extract_task >> stream_to_iceberg_task >> read_from_iceberg_task
+
+
+
+
+    # extract_task >> stream_to_iceberg_task # >> read_from_iceberg_task
+    extract_task 
+
