@@ -35,14 +35,12 @@ schema = StructType([
 
 spark = SparkSession.builder \
     .appName("stream-csv-to-iceberg") \
-    .config("spark.executor.cores", "2") \
+    .config("spark.executor.cores", "4") \
     .config("spark.executor.memory", "2g") \
-    .config("spark.cores.max", "6") \
+    .config("spark.cores.max", "8") \
     .config("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog") \
     .config("spark.sql.catalog.local.type", "hadoop") \
     .config("spark.sql.catalog.local.warehouse", "hdfs://namenode:9000/warehouse/iceberg") \
-    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
-    .config("spark.jars", "/opt/spark/external-jars/iceberg-spark-runtime-3.5_2.12-1.9.0.jar") \
     .getOrCreate()
 
 
@@ -53,7 +51,7 @@ df = spark.readStream \
     .option("header", True) \
     .option("cleanSource", "archive") \
     .option("sourceArchiveDir", "hdfs://namenode:9000/user/archive/") \
-    .option("maxFilesPerTrigger", 1) \
+    .option("maxFilesPerTrigger", 5) \
     .schema(schema) \
     .csv("hdfs://namenode:9000/user/staging_area/")
 
