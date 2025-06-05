@@ -93,14 +93,14 @@ import sys
 file_prefix = sys.argv[1] if len(sys.argv) > 1 else "tested"
 
 schema = StructType([
-    StructField("PassengerId", IntegerType()),
-    StructField("Survived", IntegerType()),
-    StructField("Pclass", IntegerType()),
+     StructField("PassengerId", LongType()),
+    StructField("Survived", LongType()),
+    StructField("Pclass", LongType()),
     StructField("Name", StringType()),
     StructField("Sex", StringType()),
     StructField("Age", DoubleType()),
-    StructField("SibSp", IntegerType()),
-    StructField("Parch", IntegerType()),
+    StructField("SibSp", LongType()),
+    StructField("Parch", LongType()),
     StructField("Ticket", StringType()),
     StructField("Fare", DoubleType()),
     StructField("Cabin", StringType()),
@@ -120,16 +120,21 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 df = spark.readStream \
+    .format("parquet") \
     .option("header", True) \
     .option("cleanSource", "archive") \
     .option("sourceArchiveDir", "hdfs://namenode:9000/user/archive/") \
     .option("maxFilesPerTrigger", 5) \
     .schema(schema) \
-    .csv("hdfs://namenode:9000/user/staging_area/")
+    .load("hdfs://namenode:9000/user/staging_area/") \
+    #.csv("hdfs://namenode:9000/user/staging_area/")
 
 df = df.withColumn("Name", lower(col("Name")))
 cols_to_drop = ["Embarked", "Cabin", "Parch", "SibSp"]
 df = df.drop(*cols_to_drop)
+
+# for c in df.columns:
+#     df = df.withColumnRenamed(c, c.lower())
 
 spark.sql("""
    CREATE DATABASE IF NOT EXISTS people_db
@@ -138,19 +143,19 @@ spark.sql("""
 # No USE statement needed if you specify people_db.people
 spark.sql("""
    CREATE TABLE IF NOT EXISTS people_db.people (
-    passengerid INT,
-    survived INT,
-    pclass INT,
-    name STRING,
-    sex STRING,
-    age DOUBLE,
-    ticket STRING,
-    fare DOUBLE
-   )
-   USING ICEBERG
-   PARTITIONED BY (pclass)
- LOCATION 'hdfs://namenode:9000/user/hive/warehouse'
-TBLPROPERTIES ('engine.hive.enabled'='true')
+  passengerid BIGINT,
+  survived BIGINT,
+  pclass BIGINT,
+  name STRING,
+  sex STRING,
+  age DOUBLE,
+  ticket STRING,
+  fare DOUBLE
+)
+USING ICEBERG
+PARTITIONED BY (pclass)
+LOCATION 'hdfs://namenode:9000/user/hive/warehouse'
+TBLPROPERTIES ('engine.hive.enabled'='true');
 """)
 
 query = df.writeStream \
