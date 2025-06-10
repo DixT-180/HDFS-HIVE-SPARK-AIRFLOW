@@ -24,7 +24,7 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 
 RUN apt-get update && apt-get install -y python3 python3-pip
 
-RUN pip install pandas boto3
+RUN pip install pandas boto3 pyarrow
 
 # --- [3] Expose SSH port ---
 EXPOSE 22 7077 8080 8081

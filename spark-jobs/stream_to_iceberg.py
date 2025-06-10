@@ -1,24 +1,22 @@
 # from pyspark.sql import SparkSession
-# from pyspark.sql.functions import col, lower, when
-# from pyspark.sql.functions import col
+# from pyspark.sql.functions import col, lower
 # from pyspark.sql.types import *
-# import sys
 
+# import sys
 
 # file_prefix = sys.argv[1] if len(sys.argv) > 1 else "tested"
 # db_name = f"{file_prefix}_db"
 # table_name = f"{file_prefix}_cleaned"
 
-
 # schema = StructType([
-#     StructField("PassengerId", IntegerType()),
-#     StructField("Survived", IntegerType()),
-#     StructField("Pclass", IntegerType()),
+#     StructField("PassengerId", LongType()),
+#     StructField("Survived", LongType()),
+#     StructField("Pclass", LongType()),
 #     StructField("Name", StringType()),
 #     StructField("Sex", StringType()),
 #     StructField("Age", DoubleType()),
-#     StructField("SibSp", IntegerType()),
-#     StructField("Parch", IntegerType()),
+#     StructField("SibSp", LongType()),
+#     StructField("Parch", LongType()),
 #     StructField("Ticket", StringType()),
 #     StructField("Fare", DoubleType()),
 #     StructField("Cabin", StringType()),
@@ -31,59 +29,61 @@
 #     .config("spark.cores.max", "8") \
 #     .config("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog") \
 #     .config("spark.sql.catalog.local.type", "hadoop") \
-#     .config("spark.sql.catalog.local.warehouse", "hdfs://namenode:9000/warehouse/iceberg") \
+#     .config("spark.sql.catalog.local.warehouse", "hdfs://namenode:9000/warehouse/hdfs-iceberg") \
 #     .getOrCreate()
 
-
-# #.config("spark.executor.cores", "4") \
-
-
-
+# # Streaming read
 # df = spark.readStream \
+#     .format("parquet") \
 #     .option("header", True) \
 #     .option("cleanSource", "archive") \
-#     .option("sourceArchiveDir", "hdfs://namenode:9000/user/archive/") \
+#     .option("sourceArchiveDir", "hdfs://namenode:9000/user/hdfs-archive/archive/") \
 #     .option("maxFilesPerTrigger", 5) \
 #     .schema(schema) \
-#     .csv("hdfs://namenode:9000/user/staging_area/")
+#     .load("hdfs://namenode:9000/user/staging_area/")
 
-
+# # Transformations
 # df = df.withColumn("Name", lower(col("Name")))
+# df = df.drop("Embarked", "Cabin", "Parch", "SibSp")
 
-# cols_to_drop = ["Embarked", "Cabin", "Parch", "SibSp"]
-# df = df.drop(*cols_to_drop)
-
-
-
-# spark.sql("CREATE DATABASE IF NOT EXISTS local.people_db")
-
-# # Create Iceberg table if not exists (schema must match your data)
+# # Create DB & Table (adjust as needed for your Iceberg catalog)
+# spark.sql("CREATE DATABASE IF NOT EXISTS local.people_db_hdfs")
 # spark.sql("""
-#    CREATE TABLE IF NOT EXISTS local.people_db.people (
-#     passengerid INT,
-#     survived INT,
-#     pclass INT,
-#     name STRING,
-#     sex STRING,
-#     age DOUBLE,
-#     ticket STRING,
-#     fare DOUBLE
-# ) USING ICEBERG
-#     PARTITIONED BY (pclass)
-
+#    CREATE TABLE IF NOT EXISTS local.people_db_hdfs.people_hdfs (
+#       passengerid BIGINT,
+#       survived BIGINT,
+#       pclass BIGINT,
+#       name STRING,
+#       sex STRING,
+#       age DOUBLE,
+#       ticket STRING,
+#       fare DOUBLE
+#    )
+#    USING ICEBERG
+#    PARTITIONED BY (pclass)
 # """)
-
 
 # query = df.writeStream \
 #     .format("iceberg") \
 #     .outputMode("append") \
-#     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people") \
+#     .option("checkpointLocation", "hdfs://namenode:9000/user/streaming_checkpoint/people_hdfs") \
 #     .trigger(processingTime="5 seconds") \
-#     .toTable("local.people_db.people")
+#     .toTable("local.people_db_hdfs.people_hdfs")
 
 # query.awaitTermination()
 
+
 #   # .trigger(once=True) \
+
+
+
+
+
+
+
+
+# For hive iceberg table
+
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lower
