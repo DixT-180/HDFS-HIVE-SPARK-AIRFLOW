@@ -1,5 +1,5 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
-#RUN THE docker-compose.spark docker-compose file to run all the services. But make sure you have the required jars in place. 
+# RUN THE docker-compose.spark docker-compose file to run all the services. But make sure you have the required jars in place. 
 
 # Hadoop-Spark-Hive Stack (Docker Compose)
 
