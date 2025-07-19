@@ -45,7 +45,6 @@ This repository contains a Docker Compose setup for a Hadoop + Spark + Hive stac
 │   └── run.sh
 ├── jars/                        ← External JARs (e.g., JDBC drivers)
 │   └── postgresql-42.7.4.jar
-├── logs/                        ← Shared logs for Hadoop/Spark/Hive
 ├── namenode/                    ← NameNode helper scripts
 │   └── run.sh
 ├── nodemanager/                 ← NodeManager helper scripts
